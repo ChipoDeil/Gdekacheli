@@ -1,12 +1,12 @@
 package com.example.yaroslav.gdekacheli;
 
+import android.*;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.Manifest;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,7 +30,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 public class Find extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
@@ -57,7 +56,7 @@ public class Find extends FragmentActivity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
             mMap.setMyLocationEnabled(true);
 
         }else{
@@ -75,13 +74,15 @@ public class Find extends FragmentActivity implements OnMapReadyCallback {
             public void onInfoWindowClick(Marker marker) {
                 LatLng some = marker.getPosition();
                 Toast.makeText(Find.this, "" + some.latitude, Toast.LENGTH_SHORT).show();
-                //переход на активность с доп информацией
-                Toast.makeText(Find.this, "" + marker.getZIndex(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(Find.this, FullInfo.class);
+                int zindex = (int) marker.getZIndex();
+                intent.putExtra("info" , array.get(zindex));
+                startActivity(intent);
             }
         });
     }
 
-    class getcords extends AsyncTask<ArrayList<String[]>, Void, ArrayList<String[]>>{
+    class getcords extends AsyncTask<ArrayList<String[]>, Void, ArrayList<String[]>> {
         @Override
         protected ArrayList<String[]> doInBackground(ArrayList<String[]>... params) {
             JSONParser parser = new JSONParser();
@@ -119,7 +120,7 @@ public class Find extends FragmentActivity implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(ArrayList<String[]> strings) {
             super.onPostExecute(strings);
-            if (ContextCompat.checkSelfPermission(Find.this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
+            if (ContextCompat.checkSelfPermission(Find.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
                 for (int i = 0; i < array.size(); i++){
                     Log.d("checkpoint", "one");
                     for (int j = 0; j < array.get(i).length; j++){
