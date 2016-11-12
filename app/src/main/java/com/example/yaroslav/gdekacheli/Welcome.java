@@ -72,7 +72,7 @@ public class Welcome extends AppCompatActivity {
     private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
-            Intent intent = new Intent(view.getContext(), Find.class);
+            Intent intent = new Intent(view.getContext(), FullFind.class);
             startActivity(intent);
             return false;
         }
