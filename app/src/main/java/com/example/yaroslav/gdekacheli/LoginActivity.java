@@ -3,6 +3,7 @@ package com.example.yaroslav.gdekacheli;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -29,6 +30,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -309,22 +316,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // TODO: attempt authentication against a network service.
 
             try {
-                //lol
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+                    URL oracle = new URL("http://keklol.ru/gdekacheli/login.php?name=" + mEmail + "&pass=" + mPassword);
+                    URLConnection uc = oracle.openConnection();
+                    BufferedReader input = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+                    String inputLine = input.readLine();
+                    if (inputLine.equals("true")) {
+
+                    }else{
+                        return false;
+                    }
+                    input.close();
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return false;
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
                 return false;
             }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
             return true;
         }
 
@@ -334,7 +344,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                Intent intent = new Intent(LoginActivity.this, FullFind.class);
+                intent.putExtra("name", mEmail);
+                startActivity(intent);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

@@ -71,16 +71,21 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         this.mMap = googleMap;
         if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
             mMap.setMyLocationEnabled(true);
-
         }else{
             Toast.makeText(this, "Навигация отключена. Проверьте разрешения приложения.", Toast.LENGTH_SHORT).show();
         }
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+        Intent intent = getIntent();
+        // Logged TODO
+        if(intent.getStringExtra("name") != null){
+            String name =  intent.getStringExtra("name");
+            Toast.makeText(this, "Здравствуй, " + name, Toast.LENGTH_SHORT).show();
+        }
+        /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
                 Toast.makeText(FullFind.this, "Ваши координаты: " + latLng.latitude + " И  " + latLng.longitude, Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
         if (ContextCompat.checkSelfPermission(FullFind.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
             Context context = getApplicationContext();
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
