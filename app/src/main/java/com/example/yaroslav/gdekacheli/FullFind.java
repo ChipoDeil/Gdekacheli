@@ -116,10 +116,9 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 LatLng some = marker.getPosition();
-                Toast.makeText(FullFind.this, "" + some.latitude, Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(FullFind.this, FullView.class);
                 int zindex = (int) marker.getZIndex();
-                intent.putExtra("info" , array.get(zindex-1));
+                intent.putExtra("info" , array.get(zindex-1)[0]);
                 startActivity(intent);
             }
         });
@@ -138,7 +137,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 JSONArray a = (JSONArray) parser.parse(inputLine);
                 for (Object o : a) {
                     JSONObject users = (JSONObject) o;
-                    String[] mass = {users.get("id").toString(), users.get("title").toString(), users.get("desc").toString(), users.get("img").toString(),
+                    String[] mass = {users.get("id").toString(), users.get("title").toString(),
                             users.get("latitude").toString(), users.get("longitude").toString()};
                     arr.add(mass);
                     array = arr;
@@ -172,8 +171,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 for (int j = 0; j < array.get(i).length; j++) {
                     Log.d("checkpoint", "two");
                     String[] mass = array.get(i);
-                    double latitude = Double.parseDouble(mass[4]);
-                    double longitude = Double.parseDouble(mass[5]);
+                    double latitude = Double.parseDouble(mass[2]);
+                    double longitude = Double.parseDouble(mass[3]);
                     LatLng coords = new LatLng(latitude, longitude);
                     mMap.addMarker(new MarkerOptions().position(coords).title(mass[1]).snippet("Узнать больше(клик)").zIndex(Float.parseFloat(mass[0])));
                 }
