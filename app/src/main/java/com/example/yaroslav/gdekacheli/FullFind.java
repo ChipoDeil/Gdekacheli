@@ -32,8 +32,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -41,7 +45,9 @@ import java.util.ArrayList;
 
 public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
+    isLogged isLogged;
     ArrayList<String[]> array;
+    String currentToken = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,17 +81,15 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             Toast.makeText(this, "Навигация отключена. Проверьте разрешения приложения.", Toast.LENGTH_SHORT).show();
         }
         Intent intent = getIntent();
-        // Logged TODO
-        if(intent.getStringExtra("name") != null){
-            String name =  intent.getStringExtra("name");
-            Toast.makeText(this, "Здравствуй, " + name, Toast.LENGTH_SHORT).show();
+        if(intent.getStringExtra("name") != null && intent.getStringExtra("token") != null){
+            Log.d("rules", "true");
+            String name = intent.getStringExtra("name");
+            String token = intent.getStringExtra("token");
+            Log.d("name", name);
+            Log.d("token", token);
+            isLogged = new isLogged(name, token);
+            isLogged.execute((Void) null);
         }
-        /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                Toast.makeText(FullFind.this, "Ваши координаты: " + latLng.latitude + " И  " + latLng.longitude, Toast.LENGTH_SHORT).show();
-            }
-        });*/
         if (ContextCompat.checkSelfPermission(FullFind.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
             Context context = getApplicationContext();
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -181,6 +185,72 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             }
         }
     }
+    class isLogged extends AsyncTask<Void, Void, Boolean> {
+        private String name = null;
+        private String token = null;
+        private boolean success = false;
+        public isLogged(String name, String token) {
+            this.name = name;
+            this.token = token;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                String link = "http://keklol.ru/gdekacheli/login.php";
+                byte data[] = null;
+                String myParams = "token="+token+"&name="+name;
+                InputStream is = null;
+                URL url = new URL(link);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+                conn.setRequestProperty("Content-Length", "" + Integer.toString(myParams.getBytes().length));
+                OutputStream os = conn.getOutputStream();
+                data = myParams.getBytes("UTF-8");
+                os.write(data);
+                data = null;
+                conn.connect();
+                int responseCode= conn.getResponseCode();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                is = conn.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                String line = null;
+                Log.d("async", "inside");
+                while((line = br.readLine()) != null) {
+                    if (line.equals("false")) {
+                        break;
+                    } else if(line.equals("error")){
+                        break;
+                    }else {
+                        token = line;
+                        if (!token.isEmpty()){
+                            this.success = true;
+                        }
+                    }
+                }
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return false;
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return false;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            isLogged = null;
+            if (this.success){
+                currentToken = token;
+                setTitle("Привет, "+name);
+            }
+        }
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -195,4 +265,5 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 return super.onOptionsItemSelected(item);
         }
     }
+
 }

@@ -105,7 +105,7 @@
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Войти</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="error_invalid_email">Введенный вами Email недействителен</string>
+    <string name="error_invalid_email">Введенный вами логин слишком короткий</string>
     <string name="error_invalid_password">Пароль слишком короткий</string>
     <string name="error_incorrect_password">Пароль неверен</string>
     <string name="error_field_required">Это поле обязательно к заполнению</string>

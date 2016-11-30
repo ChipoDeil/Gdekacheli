@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,8 +32,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -198,12 +203,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
+        return email.length() > 4;
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
         return password.length() > 4;
     }
 
@@ -305,7 +308,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
-
+        private String token = null;
+        private boolean tokenSuccess = false;
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
@@ -316,16 +320,36 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // TODO: attempt authentication against a network service.
 
             try {
-                    URL oracle = new URL("http://keklol.ru/gdekacheli/login.php?name=" + mEmail + "&pass=" + mPassword);
-                    URLConnection uc = oracle.openConnection();
-                    BufferedReader input = new BufferedReader(new InputStreamReader(uc.getInputStream()));
-                    String inputLine = input.readLine();
-                    if (inputLine.equals("true")) {
-
-                    }else{
-                        return false;
+                String link = "http://keklol.ru/gdekacheli/login.php";
+                byte data[] = null;
+                String myParams = "name="+mEmail+"&pass="+mPassword;
+                InputStream is = null;
+                URL url = new URL(link);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+                conn.setRequestProperty("Content-Length", "" + Integer.toString(myParams.getBytes().length));
+                OutputStream os = conn.getOutputStream();
+                data = myParams.getBytes("UTF-8");
+                os.write(data);
+                data = null;
+                conn.connect();
+                int responseCode= conn.getResponseCode();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                is = conn.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                String line = null;
+                while((line = br.readLine()) != null) {
+                    if (line.equals("false")) {
+                        break;
+                    } else {
+                        token = line;
+                        if (!token.isEmpty()){
+                            tokenSuccess = true;
+                        }
                     }
-                    input.close();
+                }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -344,9 +368,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                Intent intent = new Intent(LoginActivity.this, FullFind.class);
-                intent.putExtra("name", mEmail);
-                startActivity(intent);
+                if (tokenSuccess) {
+                    Intent intent = new Intent(LoginActivity.this, FullFind.class);
+                    intent.putExtra("name", mEmail);
+                    intent.putExtra("token", token);
+                    startActivity(intent);
+                }else{
+                    mPasswordView.setError(getString(R.string.error_incorrect_password));
+                    mPasswordView.requestFocus();
+                }
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
