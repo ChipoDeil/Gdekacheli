@@ -320,7 +320,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // TODO: attempt authentication against a network service.
 
             try {
-                String link = "http://keklol.ru/gdekacheli/login.php";
+                String link = "http://gdekacheli.ru/login.php";
                 byte data[] = null;
                 String myParams = "name="+mEmail+"&pass="+mPassword;
                 InputStream is = null;

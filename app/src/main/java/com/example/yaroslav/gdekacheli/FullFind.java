@@ -122,7 +122,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                LatLng some = marker.getPosition();
                 Intent intent = new Intent(FullFind.this, FullView.class);
                 int zindex = (int) marker.getZIndex();
                 intent.putExtra("info" , array.get(zindex-1)[0]);
@@ -140,7 +139,9 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
                                         if (tokenValid) {
-                                            Toast.makeText(FullFind.this, "Вы типа добавили", Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(FullFind.this, Add.class);
+                                            intent.putExtra("token", currentToken);
+                                            startActivity(intent);
                                         }else{
                                             AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
                                             builderError.setTitle("Ошибка!")
@@ -168,7 +169,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         protected ArrayList<String[]> doInBackground(ArrayList<String[]>... params) {
             JSONParser parser = new JSONParser();
             try {
-                URL oracle = new URL("http://keklol.ru/gdekacheli/getcoords.php");
+                URL oracle = new URL("http://gdekacheli.ru/getcoords.php");
                 URLConnection uc = oracle.openConnection();
                 BufferedReader input = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String inputLine = input.readLine();
@@ -232,7 +233,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         @Override
         protected Boolean doInBackground(Void... voids) {
             try {
-                String link = "http://keklol.ru/gdekacheli/login.php";
+                String link = "http://gdekacheli.ru/login.php";
                 byte data[] = null;
                 String myParams = "token="+token+"&name="+name;
                 InputStream is = null;
@@ -291,8 +292,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
-                return true;
+                Intent intentHome = new Intent(this, Welcome.class);
+                startActivity(intentHome);
             case R.id.action_login:
                 Intent intent = new Intent(this, LoginActivity.class);
                 startActivity(intent);
