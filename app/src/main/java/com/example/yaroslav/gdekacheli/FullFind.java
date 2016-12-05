@@ -131,6 +131,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
+                final double latitude = latLng.latitude;
+                final double longitude = latLng.longitude;
                 AlertDialog.Builder builder = new AlertDialog.Builder(FullFind.this);
                 builder.setTitle("Добавление качелей")
                                 .setMessage("Вы хотите добавить новые?")
@@ -141,6 +143,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                         if (tokenValid) {
                                             Intent intent = new Intent(FullFind.this, Add.class);
                                             intent.putExtra("token", currentToken);
+                                            intent.putExtra("longitude", longitude);
+                                            intent.putExtra("latitude", latitude);
                                             startActivity(intent);
                                         }else{
                                             AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
@@ -294,6 +298,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             case android.R.id.home:
                 Intent intentHome = new Intent(this, Welcome.class);
                 startActivity(intentHome);
+                return true;
             case R.id.action_login:
                 Intent intent = new Intent(this, LoginActivity.class);
                 startActivity(intent);
