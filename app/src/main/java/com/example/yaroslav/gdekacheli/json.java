@@ -23,12 +23,11 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class json {
     public static void main(String[] args) {
-        String link = "http://keklol.ru/gdekacheli/login.php";
-        byte data[] = null;
-        String params = "name=chipodeil&pass=123";
-        InputStream is = null;
         try {
-            String myParams = "token=583db7078d72b&name=chip@deil";
+            String link = "http://gdekacheli.ru/sendcoords.php";
+            byte data[] = null;
+            String myParams = "title=" + 123 + "&descr=" + 123 + "&longitude=" + 123 + "&latitude=" + 123 + "&token=" + "5846d27b28bd2" + "&img=" + 123 + "&name=" + "chipodeil";
+            InputStream is = null;
             URL url = new URL(link);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
@@ -40,98 +39,20 @@ public class json {
             os.write(data);
             data = null;
             conn.connect();
-            int responseCode= conn.getResponseCode();
+            int responseCode = conn.getResponseCode();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             is = conn.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
             String line = null;
-            String token = null;
-            boolean success = false;
-            while((line = br.readLine()) != null) {
-                if (line.equals("false")) {
-                    break;
-                } else if(line.equals("error")){
-                    break;
-                }else {
-                    token = line;
-                    if (!token.isEmpty()){
-                        success = true;
-                    }
-                }
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
             }
-
         } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
+        // TODO Auto-generated catch block
+        e.printStackTrace();
         } catch (IOException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        /*HttpClient httpclient = HttpClients.createDefault();
-        String name = "chipodeil";
-        HttpPost httppost = new HttpPost("http://keklol.ru/gdekacheli/login.php");
-        List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(2);
-        params.add(new BasicNameValuePair("name", name));
-        params.add(new BasicNameValuePair("pass", "123"));
-        try {
-            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        HttpResponse response = null;
-        try {
-            response = httpclient.execute(httppost);
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        HttpEntity entity = response.getEntity();
-        String token = null;
-        if (entity != null) {
-
-            try {
-                StringBuilder sb = new StringBuilder();
-                BufferedReader br = new BufferedReader(new InputStreamReader(entity.getContent()));
-                String line = null;
-                boolean login = false;
-                while ((line = br.readLine()) != null) {
-                    if(line.equals("false")){
-                        break;
-                    }else{
-                        login = true;
-                        token = line;
-                    }
-                }
-                if(login){
-                    HttpGet oracle = new HttpGet("http://keklol.ru/gdekacheli/test.php?name="+name+"&token="+token);
-                    HttpResponse responseSec = httpclient.execute(oracle);
-                    BufferedReader input = new BufferedReader(new InputStreamReader(responseSec.getEntity().getContent()));
-                    boolean success = false;
-                    while((line = input.readLine()) != null){
-                        if(line.equals("false")){
-                            break;
-                        }else{
-                            success = true;
-                            token = line;
-                        }
-                    }
-                    if(success){
-                        System.out.println(token);
-                    }
-                }
-            } catch (UnsupportedOperationException e) {
-                e.printStackTrace();
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-
-            } finally {
-
-            }
-        }*/
     }
 }

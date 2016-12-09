@@ -3,6 +3,7 @@ package com.example.yaroslav.gdekacheli;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -13,7 +14,10 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -55,6 +59,8 @@ public class Add extends AppCompatActivity {
     float rating;
     AddMarker adding = null;
     String token = "";
+    String name = "";
+    byte[] imageInByte;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,9 +91,26 @@ public class Add extends AppCompatActivity {
         } else {
             mAlbumStorageDirFactory = new BaseAlbumDirFactory();
         }
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return super.onCreateOptionsMenu(menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                Intent intentHome = new Intent(this, FullFind.class);
+                startActivity(intentHome);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     public void attemptLogin(){
         if (adding != null) {
@@ -119,6 +142,7 @@ public class Add extends AppCompatActivity {
         Intent intent = getIntent();
         try {
             token = intent.getStringExtra("token");
+            name = intent.getStringExtra("name");
             latitude = intent.getDoubleExtra("latitude", 0);
             longitude = intent.getDoubleExtra("longitude", 0);
         }catch(NullPointerException e){
@@ -128,8 +152,14 @@ public class Add extends AppCompatActivity {
 
         if (!photo){
             cancel = true;
-            img = photoHolder.getDrawable();
             Toast.makeText(this, "Вы не сделали фотографию!", Toast.LENGTH_SHORT).show();
+        }else{
+            img = photoHolder.getDrawable();
+            BitmapDrawable bitmapDrawable = ((BitmapDrawable) img);
+            Bitmap bitmap = bitmapDrawable .getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            imageInByte = stream.toByteArray();
         }
 
         if (cancel){
@@ -157,7 +187,7 @@ public class Add extends AppCompatActivity {
             try {
                 String link = "http://gdekacheli.ru/sendcoords.php";
                 byte data[] = null;
-                String myParams = "title="+titleMarker+"&desc="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+img;
+                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+"img/1.png"+"&name="+name;
                 InputStream is = null;
                 URL url = new URL(link);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -200,6 +230,13 @@ public class Add extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
+            if(tokenSuccess){
+                Intent intent = new Intent(Add.this, FullFind.class);
+                intent.putExtra("name", name);
+                intent.putExtra("token", token);
+                startActivity(intent);
+            }
+
         }
     }
 

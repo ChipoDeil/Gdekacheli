@@ -48,6 +48,8 @@ import java.util.ArrayList;
 public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     isLogged isLogged;
+    String token;
+    String name;
     ArrayList<String[]> array;
     String currentToken = null;
     boolean tokenValid = false;
@@ -86,10 +88,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         Intent intent = getIntent();
         if(intent.getStringExtra("name") != null && intent.getStringExtra("token") != null){
             Log.d("rules", "true");
-            String name = intent.getStringExtra("name");
-            String token = intent.getStringExtra("token");
-            Log.d("name", name);
-            Log.d("token", token);
+            name = intent.getStringExtra("name");
+            token = intent.getStringExtra("token");
             isLogged = new isLogged(name, token);
             isLogged.execute((Void) null);
         }
@@ -124,7 +124,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             public void onInfoWindowClick(Marker marker) {
                 Intent intent = new Intent(FullFind.this, FullView.class);
                 int zindex = (int) marker.getZIndex();
-                intent.putExtra("info" , array.get(zindex-1)[0]);
+                intent.putExtra("info" , array.get(zindex)[0]);
                 startActivity(intent);
             }
         });
@@ -143,6 +143,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                         if (tokenValid) {
                                             Intent intent = new Intent(FullFind.this, Add.class);
                                             intent.putExtra("token", currentToken);
+                                            intent.putExtra("name", name);
                                             intent.putExtra("longitude", longitude);
                                             intent.putExtra("latitude", latitude);
                                             startActivity(intent);
@@ -218,7 +219,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                     double latitude = Double.parseDouble(mass[2]);
                     double longitude = Double.parseDouble(mass[3]);
                     LatLng coords = new LatLng(latitude, longitude);
-                    mMap.addMarker(new MarkerOptions().position(coords).title(mass[1]).snippet("Узнать больше(клик)").zIndex(Float.parseFloat(mass[0])));
+                    mMap.addMarker(new MarkerOptions().position(coords).title(mass[1]).snippet("Узнать больше(клик)").zIndex(i));
                 }
 
                 Log.d("internet", "turned on");

@@ -90,7 +90,7 @@ public class FullView extends AppCompatActivity {
                 JSONArray a = (JSONArray) parser.parse(inputLine);
                 for (Object o : a) {
                     JSONObject users = (JSONObject) o;
-                    String[] mass = {users.get("id").toString(), users.get("title").toString(), users.get("desc").toString(), users.get("img").toString()};
+                    String[] mass = {users.get("id").toString(), users.get("title").toString(), users.get("descr").toString(), users.get("img").toString()};
                     if (!(mass[3]).isEmpty()){
                         //Достаем картинку
                         InputStream is = (InputStream) new URL("http://keklol.ru/gdekacheli/"+mass[3]).getContent();
