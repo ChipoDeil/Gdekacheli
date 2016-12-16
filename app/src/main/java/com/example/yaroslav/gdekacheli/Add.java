@@ -187,7 +187,8 @@ public class Add extends AppCompatActivity {
             try {
                 String link = "http://gdekacheli.ru/sendcoords.php";
                 byte data[] = null;
-                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+"img/1.png"+"&name="+name;
+                String img = new String(Base64.encode(imageInByte, Base64.DEFAULT));
+                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+img+"&name="+name;
                 InputStream is = null;
                 URL url = new URL(link);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();

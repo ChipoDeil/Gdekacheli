@@ -123,8 +123,13 @@ public class FullView extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList<String[]> strings) {
             super.onPostExecute(strings);
-            tv.setText(array.get(0)[2]);
-            iv.setImageDrawable(img);
+            try {
+                tv.setText(array.get(0)[2]);
+                iv.setImageDrawable(img);
+            }catch(NullPointerException e){
+
+            }
+
         }
     }
 }
