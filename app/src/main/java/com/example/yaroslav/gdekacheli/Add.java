@@ -3,8 +3,6 @@ package com.example.yaroslav.gdekacheli;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -14,7 +12,6 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,7 +23,6 @@ import android.widget.RatingBar;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +42,6 @@ public class Add extends AppCompatActivity {
     double longitude;
     boolean tokenSuccess;
     double latitude;
-    Drawable img;
     EditText title;
     String titleMarker;
     String mCurrentPhotoPath;
@@ -60,7 +55,6 @@ public class Add extends AppCompatActivity {
     AddMarker adding = null;
     String token = "";
     String name = "";
-    byte[] imageInByte;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,32 +133,24 @@ public class Add extends AppCompatActivity {
             desc.setError("Данное поле обязательно к заполнению");
             cancel = true;
         }
-        Intent intent = getIntent();
         try {
-            token = intent.getStringExtra("token");
-            name = intent.getStringExtra("name");
-            latitude = intent.getDoubleExtra("latitude", 0);
-            longitude = intent.getDoubleExtra("longitude", 0);
+            token = TokenHolder.getToken();
+            name = TokenHolder.getName();
+            latitude = TokenHolder.getLatitude();
+            longitude = TokenHolder.getLongitude();
         }catch(NullPointerException e){
             Toast.makeText(this, "Время вашей сессии истекло, зайдите ещё раз", Toast.LENGTH_SHORT).show();
             cancel = true;
         }
-
+        rating = RB.getRating();
         if (!photo){
             cancel = true;
             Toast.makeText(this, "Вы не сделали фотографию!", Toast.LENGTH_SHORT).show();
         }else{
-            img = photoHolder.getDrawable();
-            BitmapDrawable bitmapDrawable = ((BitmapDrawable) img);
-            Bitmap bitmap = bitmapDrawable .getBitmap();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            imageInByte = stream.toByteArray();
+            //TODO SENDING PHOTO
         }
 
-        if (cancel){
-
-        }else{
+        if(!cancel){
             adding = new AddMarker();
             adding.execute();
         }
@@ -182,14 +168,12 @@ public class Add extends AppCompatActivity {
 
         @Override
         protected Boolean doInBackground(Void... voids) {
-            // TODO: attempt authentication against a network service.
-
             try {
                 String link = "http://gdekacheli.ru/sendcoords.php";
-                byte data[] = null;
-                String img = new String(Base64.encode(imageInByte, Base64.DEFAULT));
-                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+img+"&name="+name;
-                InputStream is = null;
+                byte data[];
+                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+"123"+"&name="+name
+                        +"&rating="+rating;
+                InputStream is;
                 URL url = new URL(link);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -199,13 +183,10 @@ public class Add extends AppCompatActivity {
                 OutputStream os = conn.getOutputStream();
                 data = myParams.getBytes("UTF-8");
                 os.write(data);
-                data = null;
                 conn.connect();
-                int responseCode= conn.getResponseCode();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                String line = null;
+                String line;
                 while((line = br.readLine()) != null) {
                     if (line.equals("false")) {
                         break;
@@ -216,6 +197,7 @@ public class Add extends AppCompatActivity {
                         }
                     }
                 }
+
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -233,8 +215,10 @@ public class Add extends AppCompatActivity {
             super.onPostExecute(aBoolean);
             if(tokenSuccess){
                 Intent intent = new Intent(Add.this, FullFind.class);
-                intent.putExtra("name", name);
-                intent.putExtra("token", token);
+                TokenHolder.setName(name);
+                TokenHolder.setToken(token);
+                TokenHolder.setLatitude(0);
+                TokenHolder.setLongitude(0);
                 startActivity(intent);
             }
 
@@ -253,14 +237,13 @@ public class Add extends AppCompatActivity {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         switch(actionCode) {
             case ACTION_TAKE_PHOTO:
-                File f = null;
+                File f;
                 try {
                     f = setUpPhotoFile();
                     mCurrentPhotoPath = f.getAbsolutePath();
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    f = null;
                     mCurrentPhotoPath = null;
                 }
                 break;
@@ -279,8 +262,7 @@ public class Add extends AppCompatActivity {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
         File albumF = getAlbumDir();
-        File imageF = File.createTempFile(imageFileName, JPEG_FILE_SUFFIX, albumF);
-        return imageF;
+        return File.createTempFile(imageFileName, JPEG_FILE_SUFFIX, albumF);
     }
     private File getAlbumDir() {
         File storageDir = null;

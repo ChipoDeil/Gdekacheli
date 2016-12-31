@@ -9,8 +9,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.ParseException;
 import android.os.AsyncTask;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -19,9 +17,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.TokenData;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,7 +32,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,7 +48,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
     String token;
     String name;
     ArrayList<String[]> array;
-    String currentToken = null;
     boolean tokenValid = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +64,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         mMapFragment.getMapAsync(FullFind.this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+
     }
 
 
@@ -84,14 +82,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             mMap.setMyLocationEnabled(true);
         }else{
             Toast.makeText(this, "Навигация отключена. Проверьте разрешения приложения.", Toast.LENGTH_SHORT).show();
-        }
-        Intent intent = getIntent();
-        if(intent.getStringExtra("name") != null && intent.getStringExtra("token") != null){
-            Log.d("rules", "true");
-            name = intent.getStringExtra("name");
-            token = intent.getStringExtra("token");
-            isLogged = new isLogged(name, token);
-            isLogged.execute((Void) null);
         }
         if (ContextCompat.checkSelfPermission(FullFind.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
             Context context = getApplicationContext();
@@ -111,6 +101,12 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             }
             Log.d("internet", "on");
             if (isAvailable) {
+                if(TokenHolder.getName() != null && TokenHolder.getToken() != null){
+                    name = TokenHolder.getName();
+                    token = TokenHolder.getToken();
+                    isLogged = new isLogged(name, token);
+                    isLogged.execute((Void) null);
+                }
                 new getcords().execute();
             }else{
                 Toast.makeText(FullFind.this, "Ваше подключение к сети интернет нестабильно. " +
@@ -133,6 +129,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             public void onMapLongClick(LatLng latLng) {
                 final double latitude = latLng.latitude;
                 final double longitude = latLng.longitude;
+                TokenHolder.setLatitude(latitude);
+                TokenHolder.setLongitude(longitude);
                 AlertDialog.Builder builder = new AlertDialog.Builder(FullFind.this);
                 builder.setTitle("Добавление качелей")
                                 .setMessage("Вы хотите добавить новые?")
@@ -142,10 +140,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                     public void onClick(DialogInterface dialogInterface, int i) {
                                         if (tokenValid) {
                                             Intent intent = new Intent(FullFind.this, Add.class);
-                                            intent.putExtra("token", currentToken);
-                                            intent.putExtra("name", name);
-                                            intent.putExtra("longitude", longitude);
-                                            intent.putExtra("latitude", latitude);
                                             startActivity(intent);
                                         }else{
                                             AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
@@ -156,6 +150,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                                         @Override
                                                         public void onClick(DialogInterface dialogInterface, int i) {
                                                             Intent intent = new Intent(FullFind.this, LoginActivity.class);
+                                                            intent.putExtra("info", "continue");
                                                             startActivity(intent);
                                                         }
                                                     });
@@ -178,7 +173,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 URLConnection uc = oracle.openConnection();
                 BufferedReader input = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String inputLine = input.readLine();
-                ArrayList<String[]> arr = new ArrayList<String[]>();
+                ArrayList<String[]> arr = new ArrayList<>();
                 JSONArray a = (JSONArray) parser.parse(inputLine);
                 for (Object o : a) {
                     JSONObject users = (JSONObject) o;
@@ -239,9 +234,9 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         protected Boolean doInBackground(Void... voids) {
             try {
                 String link = "http://gdekacheli.ru/login.php";
-                byte data[] = null;
+                byte data[];
                 String myParams = "token="+token+"&name="+name;
-                InputStream is = null;
+                InputStream is;
                 URL url = new URL(link);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
@@ -251,13 +246,10 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 OutputStream os = conn.getOutputStream();
                 data = myParams.getBytes("UTF-8");
                 os.write(data);
-                data = null;
                 conn.connect();
-                int responseCode= conn.getResponseCode();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                String line = null;
+                String line;
                 Log.d("async", "inside");
                 while((line = br.readLine()) != null) {
                     if (line.equals("false")) {
@@ -288,7 +280,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             isLogged = null;
             if (this.success){
                 tokenValid = this.success;
-                currentToken = token;
+                TokenHolder.setToken(token);
                 setTitle("Привет, "+name);
             }
         }

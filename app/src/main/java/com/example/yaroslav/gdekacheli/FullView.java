@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.ParseException;
@@ -13,13 +12,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.ads.formats.NativeAd;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -38,6 +36,7 @@ public class FullView extends AppCompatActivity {
     ArrayList<String[]> array;
     String id;
     Drawable img = null;
+    RatingBar RB;
     ImageView iv;
     TextView tv;
     @Override
@@ -47,7 +46,15 @@ public class FullView extends AppCompatActivity {
         tv = (TextView) findViewById(R.id.test);
         iv = (ImageView)findViewById(R.id.imageView);
         Intent intent = getIntent();
+        RB = (RatingBar) findViewById(R.id.ratingBarView);
         id = intent.getStringExtra("info");
+        RB.setFocusable(false);
+        RB.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                return true;
+            }
+        });
         //вызов асинктаска
         if (ContextCompat.checkSelfPermission(FullView.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
             Context context = getApplicationContext();
@@ -55,19 +62,16 @@ public class FullView extends AppCompatActivity {
             boolean isAvailable = false;
             try{
                 if (cm != null){
-                    Log.d("cm", "!null");
                     NetworkInfo ni = cm.getActiveNetworkInfo();
                     if (ni != null){
-                        Log.d("ni", "!null");
                         isAvailable = ni.isConnectedOrConnecting();
                     }
                 }
             }catch (Exception ex){
                 ex.printStackTrace();
             }
-            Log.d("internet", "on");
             if (isAvailable) {
-                new FullView.getcords().execute();
+                new FullView.getItem().execute();
             }else{
                 Toast.makeText(FullView.this, "Ваше подключение к сети интернет нестабильно. " +
                         "Попробуйте открыть приложение ещё раз.", Toast.LENGTH_LONG).show();
@@ -76,24 +80,25 @@ public class FullView extends AppCompatActivity {
             Toast.makeText(FullView.this, "Проверьте ваше подключение к сети интернет.", Toast.LENGTH_SHORT).show();
         }
         //<вызов асинктаска
+
     }
-    class getcords extends AsyncTask<ArrayList<String[]>, Void, ArrayList<String[]>> {
+    class getItem extends AsyncTask<ArrayList<String[]>, Void, ArrayList<String[]>> {
         @Override
         protected ArrayList<String[]> doInBackground(ArrayList<String[]>... params) {
             JSONParser parser = new JSONParser();
             try {
-                URL oracle = new URL("http://keklol.ru/gdekacheli/getcoords.php?id="+id);
+                URL oracle = new URL("http://gdekacheli.ru/getcoords.php?id="+id);
                 URLConnection uc = oracle.openConnection();
                 BufferedReader input = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String inputLine = input.readLine();
-                ArrayList<String[]> arr = new ArrayList<String[]>();
+                ArrayList<String[]> arr = new ArrayList<>();
                 JSONArray a = (JSONArray) parser.parse(inputLine);
                 for (Object o : a) {
                     JSONObject users = (JSONObject) o;
-                    String[] mass = {users.get("id").toString(), users.get("title").toString(), users.get("descr").toString(), users.get("img").toString()};
+                    String[] mass = {users.get("id").toString(), users.get("title").toString(), users.get("descr").toString(), users.get("img").toString(), users.get("rating").toString()};
                     if (!(mass[3]).isEmpty()){
                         //Достаем картинку
-                        InputStream is = (InputStream) new URL("http://keklol.ru/gdekacheli/"+mass[3]).getContent();
+                        InputStream is = (InputStream) new URL("http://gdekacheli.ru/"+mass[3]).getContent();
                         img = Drawable.createFromStream(is, "123");
                     }
                     arr.add(mass);
@@ -126,8 +131,9 @@ public class FullView extends AppCompatActivity {
             try {
                 tv.setText(array.get(0)[2]);
                 iv.setImageDrawable(img);
+                RB.setRating(Float.parseFloat(array.get(0)[4]));
             }catch(NullPointerException e){
-
+                Toast.makeText(getApplicationContext(), "Что-то пошло не так", Toast.LENGTH_LONG);
             }
 
         }
