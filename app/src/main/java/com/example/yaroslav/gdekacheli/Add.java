@@ -3,6 +3,7 @@ package com.example.yaroslav.gdekacheli;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -12,6 +13,7 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,8 +24,11 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -53,6 +58,7 @@ public class Add extends AppCompatActivity {
     boolean photo = false;
     float rating;
     AddMarker adding = null;
+    byte[] b;
     String token = "";
     String name = "";
     @Override
@@ -147,7 +153,12 @@ public class Add extends AppCompatActivity {
             cancel = true;
             Toast.makeText(this, "Вы не сделали фотографию!", Toast.LENGTH_SHORT).show();
         }else{
-            //TODO SENDING PHOTO
+            photoHolder.setDrawingCacheEnabled(true);
+            photoHolder.buildDrawingCache();
+            Bitmap bm = photoHolder.getDrawingCache();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            b = stream.toByteArray();
         }
 
         if(!cancel){
@@ -169,9 +180,10 @@ public class Add extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... voids) {
             try {
+                String filename = null;
                 String link = "http://gdekacheli.ru/sendcoords.php";
                 byte data[];
-                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&img="+"123"+"&name="+name
+                String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&name="+name
                         +"&rating="+rating;
                 InputStream is;
                 URL url = new URL(link);
@@ -188,22 +200,39 @@ public class Add extends AppCompatActivity {
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
                 String line;
                 while((line = br.readLine()) != null) {
+                    Log.d("output text", line);
                     if (line.equals("false")) {
                         break;
-                    } else {
-                        token = line;
+                    } else if(line.equals("token")){
+                        token = br.readLine();
                         if (!token.isEmpty()){
                             tokenSuccess = true;
                         }
+                    } else if(line.equals("filename")){
+                        filename = br.readLine();
+                        Log.d("interesting", filename);
                     }
                 }
-
+                if(filename != null) {
+                    InputStream is2;
+                    HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("http://gdekacheli.ru/file.php?filename=" + filename).openConnection();
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setDoInput(true);
+                    httpURLConnection.setRequestMethod("POST");
+                    OutputStream os2 = httpURLConnection.getOutputStream();
+                    os2.write(b);
+                    httpURLConnection.connect();
+                    is2 = httpURLConnection.getInputStream();
+                    BufferedReader br2 = new BufferedReader(new InputStreamReader(is2));
+                    String line2;
+                    while ((line2 = br2.readLine()) != null) {
+                        //TODO reading lines
+                    }
+                }
             } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
             }
@@ -247,7 +276,6 @@ public class Add extends AppCompatActivity {
                     mCurrentPhotoPath = null;
                 }
                 break;
-
             default:
                 break;
         }

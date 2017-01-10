@@ -77,9 +77,8 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
             app:srcCompat="@drawable/quantum_ic_art_track_grey600_48"
-            android:minHeight="100dp"
-            android:maxHeight="400dp"
             android:id="@+id/photoHolder"
             />
         <ImageButton
