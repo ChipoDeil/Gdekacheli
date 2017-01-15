@@ -1,7 +1,8 @@
 package com.example.yaroslav.gdekacheli;
 
 
-public class TokenHolder {
+public class InfoHolder {
+    private static boolean online = true;
     private static String token;
     private static String name;
     private static double longitude;
@@ -17,6 +18,12 @@ public class TokenHolder {
     }
     public static Double getLatitude(){
         return latitude;
+    }
+    public static Boolean getStatus(){
+        return online;
+    }
+    public static void setStatus(boolean a){
+        online = a;
     }
     public static void setToken(String t){
         token = t;

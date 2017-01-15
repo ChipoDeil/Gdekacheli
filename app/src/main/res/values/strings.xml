@@ -99,6 +99,7 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_login">Авторизация</string>
+    <string name="title_activity_fullfind">Вот качели!</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Логин</string>
@@ -114,5 +115,7 @@
     </string>
     <string name="title_activity_add">Добавление</string>
     <string name="album_name">gdekacheli</string>
+    <string name="menu_welcome_online">Онлайн</string>
+    <string name="menu_welcome_offline">Оффлайн</string>
 
 </resources>

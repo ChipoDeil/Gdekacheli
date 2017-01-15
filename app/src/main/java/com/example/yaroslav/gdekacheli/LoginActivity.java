@@ -274,8 +274,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 if (tokenSuccess) {
-                    TokenHolder.setName(mEmail);
-                    TokenHolder.setToken(token);
+                    InfoHolder.setName(mEmail);
+                    InfoHolder.setToken(token);
                     Intent info = getIntent();
                     if(info.getStringExtra("info") != null){
                         Intent intent = new Intent(LoginActivity.this, Add.class);

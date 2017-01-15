@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.ParseException;
@@ -19,7 +20,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.TokenData;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -45,6 +45,7 @@ import java.util.ArrayList;
 public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     isLogged isLogged;
+    Boolean downloaded = false;
     String token;
     String name;
     ArrayList<String[]> array;
@@ -64,8 +65,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         mMapFragment.getMapAsync(FullFind.this);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-
     }
 
 
@@ -82,46 +81,85 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             mMap.setMyLocationEnabled(true);
         }else{
             Toast.makeText(this, "Навигация отключена. Проверьте разрешения приложения.", Toast.LENGTH_SHORT).show();
+            InfoHolder.setStatus(false);
         }
-        if (ContextCompat.checkSelfPermission(FullFind.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED){
-            Context context = getApplicationContext();
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            boolean isAvailable = false;
-            try{
-                if (cm != null){
-                    Log.d("cm", "!null");
-                    NetworkInfo ni = cm.getActiveNetworkInfo();
-                    if (ni != null){
-                        Log.d("ni", "!null");
-                        isAvailable = ni.isConnectedOrConnecting();
+        if(InfoHolder.getStatus()) {
+            if (ContextCompat.checkSelfPermission(FullFind.this, android.Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
+                Context context = getApplicationContext();
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                boolean isAvailable = false;
+                try {
+                    if (cm != null) {
+                        Log.d("cm", "!null");
+                        NetworkInfo ni = cm.getActiveNetworkInfo();
+                        if (ni != null) {
+                            Log.d("ni", "!null");
+                            isAvailable = ni.isConnectedOrConnecting();
+                        }
                     }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-            }catch (Exception ex){
-                ex.printStackTrace();
-            }
-            Log.d("internet", "on");
-            if (isAvailable) {
-                if(TokenHolder.getName() != null && TokenHolder.getToken() != null){
-                    name = TokenHolder.getName();
-                    token = TokenHolder.getToken();
-                    isLogged = new isLogged(name, token);
-                    isLogged.execute((Void) null);
+                if (isAvailable) {
+                    if (InfoHolder.getName() != null && InfoHolder.getToken() != null) {
+                        name = InfoHolder.getName();
+                        token = InfoHolder.getToken();
+                        isLogged = new isLogged(name, token);
+                        isLogged.execute((Void) null);
+                    }
+                    new getcords().execute();
+                    setLocCoords();
+                } else {
+                    Toast.makeText(FullFind.this, "Ваше подключение к сети интернет нестабильно. " +
+                            "Попробуйте открыть приложение ещё раз.", Toast.LENGTH_LONG).show();
+                    InfoHolder.setStatus(false);
                 }
-                new getcords().execute();
-            }else{
-                Toast.makeText(FullFind.this, "Ваше подключение к сети интернет нестабильно. " +
-                        "Попробуйте открыть приложение ещё раз.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(FullFind.this, "Проверьте ваше подключение к сети интернет.", Toast.LENGTH_SHORT).show();
+                InfoHolder.setStatus(false);
             }
         }else{
-            Toast.makeText(FullFind.this, "Проверьте ваше подключение к сети интернет.", Toast.LENGTH_SHORT).show();
+            MiniSqlHelper db = new MiniSqlHelper(this);
+            Cursor cursor = db.getCoords();
+            boolean hasMoreCoords = cursor.moveToFirst();
+            int i = 0;
+            while(hasMoreCoords){
+                double latitude = Double.parseDouble(cursor.getString(cursor.getColumnIndex("LATITUDE")));
+                double longitude = Double.parseDouble(cursor.getString(cursor.getColumnIndex("LONGITUDE")));
+                String title = cursor.getString(cursor.getColumnIndex("TITLE"));
+                LatLng coords = new LatLng(latitude, longitude);
+                mMap.addMarker(new MarkerOptions().position(coords).title(title).snippet("Узнать больше(клик)").zIndex(i));
+                hasMoreCoords = cursor.moveToNext();
+                i++;
+            }
+            setLocCoords();
+
         }
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                Intent intent = new Intent(FullFind.this, FullView.class);
-                int zindex = (int) marker.getZIndex();
-                intent.putExtra("info" , array.get(zindex)[0]);
-                startActivity(intent);
+                if(InfoHolder.getStatus()) {
+                    if(marker.getAlpha() < 1) {
+                        Intent intent = new Intent(FullFind.this, FullView.class);
+                        intent.putExtra("info", marker.getSnippet());
+                        intent.putExtra("glob", false);
+                        startActivity(intent);
+                    }else{
+                        Intent intent = new Intent(FullFind.this, FullView.class);
+                        int zindex = (int) marker.getZIndex();
+                        intent.putExtra("info", array.get(zindex)[0]);
+                        intent.putExtra("name", array.get(zindex)[1]);
+                        startActivity(intent);
+                    }
+                }else{
+                    if(marker.getAlpha() < 1){
+                        Intent intent = new Intent(FullFind.this, FullView.class);
+                        intent.putExtra("info", marker.getSnippet());
+                        startActivity(intent);
+                    }else {
+                        Toast.makeText(FullFind.this, "Данное действие доступно лишь в онлайн режиме", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
         });
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
@@ -129,8 +167,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             public void onMapLongClick(LatLng latLng) {
                 final double latitude = latLng.latitude;
                 final double longitude = latLng.longitude;
-                TokenHolder.setLatitude(latitude);
-                TokenHolder.setLongitude(longitude);
+                InfoHolder.setLatitude(latitude);
+                InfoHolder.setLongitude(longitude);
                 AlertDialog.Builder builder = new AlertDialog.Builder(FullFind.this);
                 builder.setTitle("Добавление качелей")
                                 .setMessage("Вы хотите добавить новые?")
@@ -138,24 +176,29 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                 .setNegativeButton("Добавить", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
-                                        if (tokenValid) {
+                                        if(InfoHolder.getStatus()) {
+                                            if (tokenValid) {
+                                                Intent intent = new Intent(FullFind.this, Add.class);
+                                                startActivity(intent);
+                                            } else {
+                                                AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
+                                                builderError.setTitle("Ошибка!")
+                                                        .setMessage("Для совершения данной операции вам нужно войти")
+                                                        .setCancelable(true)
+                                                        .setNegativeButton("Войти", new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                                Intent intent = new Intent(FullFind.this, LoginActivity.class);
+                                                                intent.putExtra("info", "continue");
+                                                                startActivity(intent);
+                                                            }
+                                                        });
+                                                AlertDialog alertError = builderError.create();
+                                                alertError.show();
+                                            }
+                                        }else{
                                             Intent intent = new Intent(FullFind.this, Add.class);
                                             startActivity(intent);
-                                        }else{
-                                            AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
-                                            builderError.setTitle("Ошибка!")
-                                                    .setMessage("Для совершения данной операции вам нужно войти")
-                                                    .setCancelable(true)
-                                                    .setNegativeButton("Войти", new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                                            Intent intent = new Intent(FullFind.this, LoginActivity.class);
-                                                            intent.putExtra("info", "continue");
-                                                            startActivity(intent);
-                                                        }
-                                                    });
-                                            AlertDialog alertError = builderError.create();
-                                            alertError.show();
                                         }
                                     }
                                 });
@@ -164,6 +207,23 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             }
         });
     }
+    public void setLocCoords(){
+        MiniSqlHelper db = new MiniSqlHelper(this);
+        int i = 0;
+        Cursor locCursor = db.getLocCoords();
+        boolean hasMoreCoords = locCursor.moveToFirst();
+        while(hasMoreCoords){
+            double latitude = Double.parseDouble(locCursor.getString(locCursor.getColumnIndex("LATITUDE")));
+            double longitude = Double.parseDouble(locCursor.getString(locCursor.getColumnIndex("LONGITUDE")));
+            String id = locCursor.getString(locCursor.getColumnIndex("ID"));
+            String title = locCursor.getString(locCursor.getColumnIndex("TITLE"));
+            LatLng coords = new LatLng(latitude, longitude);
+            mMap.addMarker(new MarkerOptions().position(coords).title(title).snippet(id).zIndex(i).alpha(0.5f));
+            hasMoreCoords = locCursor.moveToNext();
+            i++;
+        }
+    }
+
     class getcords extends AsyncTask<ArrayList<String[]>, Void, ArrayList<String[]>> {
         @Override
         protected ArrayList<String[]> doInBackground(ArrayList<String[]>... params) {
@@ -186,15 +246,12 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 return arr;
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-                Log.d("error", "null1");
                 return null;
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.d("error", "null2");
                 return null;
             } catch (ParseException e) {
                 e.printStackTrace();
-                Log.d("error", "null3");
                 return null;
             } catch (org.json.simple.parser.ParseException e) {
                 e.printStackTrace();
@@ -207,18 +264,13 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         protected void onPostExecute(ArrayList<String[]> strings) {
             super.onPostExecute(strings);
             for (int i = 0; i < array.size(); i++) {
-                Log.d("checkpoint", "one");
-                for (int j = 0; j < array.get(i).length; j++) {
-                    Log.d("checkpoint", "two");
-                    String[] mass = array.get(i);
-                    double latitude = Double.parseDouble(mass[2]);
-                    double longitude = Double.parseDouble(mass[3]);
-                    LatLng coords = new LatLng(latitude, longitude);
-                    mMap.addMarker(new MarkerOptions().position(coords).title(mass[1]).snippet("Узнать больше(клик)").zIndex(i));
-                }
-
-                Log.d("internet", "turned on");
+                String[] mass = array.get(i);
+                double latitude = Double.parseDouble(mass[2]);
+                double longitude = Double.parseDouble(mass[3]);
+                LatLng coords = new LatLng(latitude, longitude);
+                mMap.addMarker(new MarkerOptions().position(coords).title(mass[1]).snippet("Узнать больше(клик)").zIndex(i));
             }
+            downloaded = true;
         }
     }
     class isLogged extends AsyncTask<Void, Void, Boolean> {
@@ -252,6 +304,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 String line;
                 Log.d("async", "inside");
                 while((line = br.readLine()) != null) {
+                    //TODO switch
                     if (line.equals("false")) {
                         break;
                     } else if(line.equals("error")){
@@ -264,11 +317,9 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                     }
                 }
             } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
             }
@@ -279,8 +330,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
         protected void onPostExecute(final Boolean success) {
             isLogged = null;
             if (this.success){
-                tokenValid = this.success;
-                TokenHolder.setToken(token);
+                tokenValid = true;
+                InfoHolder.setToken(token);
                 setTitle("Привет, "+name);
             }
         }
@@ -293,9 +344,28 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 startActivity(intentHome);
                 return true;
             case R.id.action_login:
-                Intent intent = new Intent(this, LoginActivity.class);
-                startActivity(intent);
+                if(InfoHolder.getStatus()) {
+                    Intent intentLogin = new Intent(this, LoginActivity.class);
+                    startActivity(intentLogin);
+                }else{
+                    Toast.makeText(this, "Вы находитесь в оффлайн режиме", Toast.LENGTH_SHORT).show();
+                }
                 return true;
+            case R.id.action_sort:
+                if(InfoHolder.getStatus()) {
+                    if (downloaded) {
+                        MiniSqlHelper db = new MiniSqlHelper(this);
+                        if (db.insertData(array)) {
+                            Toast.makeText(this, "Информация загружена", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Дождитесь загрузки информации с сервера", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(this, "Вы находитесь в оффлайн режиме", Toast.LENGTH_SHORT).show();
+                }
             default:
                 return super.onOptionsItemSelected(item);
         }

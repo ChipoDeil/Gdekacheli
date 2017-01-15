@@ -37,25 +37,32 @@
             android:value="@string/google_maps_key" />
 
         <activity
+            android:screenOrientation="portrait"
             android:name=".Welcome"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_welcome"
-            android:theme="@style/FullscreenTheme">
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FullView" />
         <activity
-            android:name=".FullFind"
-            android:label="Вот качели!"
+            android:name=".FullView"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
+            android:screenOrientation="portrait"
+            android:name=".FullFind"
+            android:label="@string/title_activity_fullfind"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:screenOrientation="portrait"
             android:name=".LoginActivity"
             android:label="@string/title_activity_login" />
         <activity
+            android:screenOrientation="portrait"
             android:name=".Add"
             android:label="@string/title_activity_add"
             android:theme="@style/AppTheme.NoActionBar"></activity>
