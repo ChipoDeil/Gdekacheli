@@ -104,6 +104,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                     if (InfoHolder.getName() != null && InfoHolder.getToken() != null) {
                         name = InfoHolder.getName();
                         token = InfoHolder.getToken();
+                        Log.d("token", token);
                         isLogged = new isLogged(name, token);
                         isLogged.execute((Void) null);
                     }
@@ -144,18 +145,25 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                         intent.putExtra("info", marker.getSnippet());
                         intent.putExtra("glob", false);
                         startActivity(intent);
+                        overridePendingTransition(R.anim.outnext, R.anim.innext);
+                        finish();
                     }else{
                         Intent intent = new Intent(FullFind.this, FullView.class);
                         int zindex = (int) marker.getZIndex();
                         intent.putExtra("info", array.get(zindex)[0]);
                         intent.putExtra("name", array.get(zindex)[1]);
                         startActivity(intent);
+                        overridePendingTransition(R.anim.outnext, R.anim.innext);
+                        finish();
                     }
                 }else{
                     if(marker.getAlpha() < 1){
                         Intent intent = new Intent(FullFind.this, FullView.class);
                         intent.putExtra("info", marker.getSnippet());
+                        intent.putExtra("glob", false);
                         startActivity(intent);
+                        overridePendingTransition(R.anim.outnext, R.anim.innext);
+                        finish();
                     }else {
                         Toast.makeText(FullFind.this, "Данное действие доступно лишь в онлайн режиме", Toast.LENGTH_SHORT).show();
                     }
@@ -180,6 +188,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                             if (tokenValid) {
                                                 Intent intent = new Intent(FullFind.this, Add.class);
                                                 startActivity(intent);
+                                                overridePendingTransition(R.anim.outnext, R.anim.innext);
+                                                finish();
                                             } else {
                                                 AlertDialog.Builder builderError = new AlertDialog.Builder(FullFind.this);
                                                 builderError.setTitle("Ошибка!")
@@ -191,6 +201,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                                                 Intent intent = new Intent(FullFind.this, LoginActivity.class);
                                                                 intent.putExtra("info", "continue");
                                                                 startActivity(intent);
+                                                                overridePendingTransition(R.anim.outnext, R.anim.innext);
+                                                                finish();
                                                             }
                                                         });
                                                 AlertDialog alertError = builderError.create();
@@ -199,6 +211,8 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                                         }else{
                                             Intent intent = new Intent(FullFind.this, Add.class);
                                             startActivity(intent);
+                                            overridePendingTransition(R.anim.outnext, R.anim.innext);
+                                            finish();
                                         }
                                     }
                                 });
@@ -342,11 +356,15 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             case android.R.id.home:
                 Intent intentHome = new Intent(this, Welcome.class);
                 startActivity(intentHome);
+                overridePendingTransition(R.anim.outprev, R.anim.inprev);
+                finish();
                 return true;
             case R.id.action_login:
                 if(InfoHolder.getStatus()) {
                     Intent intentLogin = new Intent(this, LoginActivity.class);
                     startActivity(intentLogin);
+                    overridePendingTransition(R.anim.outnext, R.anim.innext);
+                    finish();
                 }else{
                     Toast.makeText(this, "Вы находитесь в оффлайн режиме", Toast.LENGTH_SHORT).show();
                 }
@@ -369,6 +387,12 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, Welcome.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.outprev, R.anim.inprev);
     }
 
 }

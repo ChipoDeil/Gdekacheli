@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,7 +23,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.Toast;
 
@@ -40,6 +38,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Add extends AppCompatActivity {
@@ -54,15 +53,17 @@ public class Add extends AppCompatActivity {
     EditText title;
     String titleMarker;
     String mCurrentPhotoPath;
-    ImageView photoHolder;
     String descMarker;
+    Button fab;
+    Button showPhoto;
+    int numPhoto = 0;
     ImageButton image;
     EditText desc;
     RatingBar RB;
     boolean photo = false;
     float rating;
     AddMarker adding = null;
-    byte[] b;
+    ArrayList<byte[]> images;
     String token = "";
     String name = "";
     View mAddFormView;
@@ -73,17 +74,18 @@ public class Add extends AppCompatActivity {
         setContentView(R.layout.activity_add);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Button fab = (Button) findViewById(R.id.fab);
+        fab = (Button) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptAdding();
             }
         });
+        showPhoto = (Button) findViewById(R.id.showPhoto);
+        images = new ArrayList<>();
         title = (EditText)findViewById(R.id.titleMarker);
         desc = (EditText)findViewById(R.id.desc);
         RB = (RatingBar)findViewById(R.id.ratingMarker);
-        photoHolder = (ImageView)findViewById(R.id.photoHolder);
         RB.setRating(5);
         image = (ImageButton)findViewById(R.id.takePhoto);
         image.setOnClickListener(new View.OnClickListener() {
@@ -133,6 +135,8 @@ public class Add extends AppCompatActivity {
             case android.R.id.home:
                 Intent intentHome = new Intent(this, FullFind.class);
                 startActivity(intentHome);
+                overridePendingTransition(R.anim.outprev, R.anim.inprev);
+                finish();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -184,14 +188,14 @@ public class Add extends AppCompatActivity {
         if (!photo){
             cancel = true;
             Toast.makeText(this, "Вы не сделали фотографию!", Toast.LENGTH_SHORT).show();
-        }else{
+        }/*else{
             photoHolder.setDrawingCacheEnabled(true);
             photoHolder.buildDrawingCache();
             Bitmap bm = photoHolder.getDrawingCache();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bm.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             b = stream.toByteArray();
-        }
+        }*/
 
         if(!cancel && InfoHolder.getStatus()){
             showProgress(true);
@@ -201,9 +205,11 @@ public class Add extends AppCompatActivity {
             InfoHolder.setLatitude(0);
             InfoHolder.setLongitude(0);
             MiniSqlHelper db = new MiniSqlHelper(this);
-            if(db.insertLocData(new String[]{titleMarker, descMarker, latitude+"", longitude+"", rating+""}, b)){
+            if(db.insertLocData(new String[]{titleMarker, descMarker, latitude+"", longitude+"", rating+""}, images)){
                 Intent intent = new Intent(this, FullFind.class);
                 startActivity(intent);
+                overridePendingTransition(R.anim.outprev, R.anim.inprev);
+                finish();
             }else{
                 Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show();
             }
@@ -226,11 +232,8 @@ public class Add extends AppCompatActivity {
         }else if(requestCode == ACTION_CHOOSE_PHOTO && resultCode == RESULT_OK){
             if(data != null){
                 setPic(data.getData());
-                Log.d("data", data.toString());
             }
         }
-        Log.d("request", requestCode+"");
-        Log.d("result", resultCode+"");
     }
 
     private void dispatchTakePictureIntent(int actionCode) {
@@ -291,14 +294,14 @@ public class Add extends AppCompatActivity {
         }
     }
     private void setPic() {
-            int targetW = photoHolder.getWidth();
-            int targetH = photoHolder.getHeight();
+            int targetW = 656;
+            int targetH = 656;
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             bmOptions.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
             int photoW = bmOptions.outWidth;
             int photoH = bmOptions.outHeight;
-            int scaleFactor = 1;
+            int scaleFactor = 2;
             if ((targetW > 0) || (targetH > 0)) {
                 scaleFactor = Math.min(photoW/targetW, photoH/targetH);
             }
@@ -306,7 +309,7 @@ public class Add extends AppCompatActivity {
             bmOptions.inSampleSize = scaleFactor;
             bmOptions.inPurgeable = true;
             Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-            photoHolder.setImageBitmap(bitmap);
+            addPic(bitmap);
             photo = true;
 
     }
@@ -361,14 +364,14 @@ public class Add extends AppCompatActivity {
     private void setPic(Uri uri){
         try{
             InputStream is = getContentResolver().openInputStream(uri);
-            int targetW = photoHolder.getWidth();
-            int targetH = photoHolder.getHeight();
+            int targetW = 656;
+            int targetH = 656;
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             bmOptions.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(is, null, bmOptions);
             int photoW = bmOptions.outWidth;
             int photoH = bmOptions.outHeight;
-            int scaleFactor = 1;
+            int scaleFactor = 2;
             if ((targetW > 0) || (targetH > 0)) {
                 scaleFactor = Math.min(photoW/targetW, photoH/targetH);
             }
@@ -377,7 +380,7 @@ public class Add extends AppCompatActivity {
             bmOptions.inPurgeable = true;
             is = getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(is, null, bmOptions);
-            photoHolder.setImageBitmap(bitmap);
+            addPic(bitmap);
             photo = true;
             is.close();
         } catch (FileNotFoundException e) {
@@ -385,6 +388,34 @@ public class Add extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addPic(Bitmap bitmap){
+        if (numPhoto < 2){
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        images.add(stream.toByteArray());
+        numPhoto++;
+        showPhoto.setText("Прикреплено " + numPhoto + " фото");
+        bitmap.recycle();
+            if(stream != null){
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else{
+            Toast.makeText(this, "Вы не можете загружать более 2 фотографий", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, FullFind.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.outprev, R.anim.inprev);
+        finish();
     }
 
     public class AddMarker extends AsyncTask<Void, Void, Boolean> {
@@ -396,7 +427,7 @@ public class Add extends AppCompatActivity {
                 String link = "http://gdekacheli.ru/sendcoords.php";
                 byte data[];
                 String myParams = "title="+titleMarker+"&descr="+descMarker+"&longitude="+longitude+"&latitude="+latitude+"&token="+token+"&name="+name
-                        +"&rating="+rating;
+                        +"&rating="+rating+"&num="+numPhoto;
                 InputStream is;
                 URL url = new URL(link);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -427,19 +458,21 @@ public class Add extends AppCompatActivity {
                     }
                 }
                 if(filename != null) {
-                    InputStream is2;
-                    HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("http://gdekacheli.ru/file.php?filename=" + filename).openConnection();
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.setRequestMethod("POST");
-                    OutputStream os2 = httpURLConnection.getOutputStream();
-                    os2.write(b);
-                    httpURLConnection.connect();
-                    is2 = httpURLConnection.getInputStream();
-                    BufferedReader br2 = new BufferedReader(new InputStreamReader(is2));
-                    String line2;
-                    while ((line2 = br2.readLine()) != null) {
-                        //TODO reading lines
+                    for(int i = 0; i < numPhoto; i++) {
+                        InputStream is2;
+                        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("http://gdekacheli.ru/file.php?filename=" + filename + i).openConnection();
+                        httpURLConnection.setDoOutput(true);
+                        httpURLConnection.setDoInput(true);
+                        httpURLConnection.setRequestMethod("POST");
+                        OutputStream os2 = httpURLConnection.getOutputStream();
+                        os2.write(images.get(i));
+                        httpURLConnection.connect();
+                        is2 = httpURLConnection.getInputStream();
+                        BufferedReader br2 = new BufferedReader(new InputStreamReader(is2));
+                        String line2;
+                        while ((line2 = br2.readLine()) != null) {
+                            //TODO reading lines
+                        }
                     }
                 }
             } catch (MalformedURLException e) {
@@ -457,12 +490,14 @@ public class Add extends AppCompatActivity {
             super.onPostExecute(aBoolean);
             showProgress(false);
             if(tokenSuccess){
-                Intent intent = new Intent(Add.this, FullFind.class);
                 InfoHolder.setName(name);
                 InfoHolder.setToken(token);
                 InfoHolder.setLatitude(0);
                 InfoHolder.setLongitude(0);
+                Intent intent = new Intent(Add.this, FullFind.class);
                 startActivity(intent);
+                overridePendingTransition(R.anim.outprev, R.anim.inprev);
+                finish();
             }
 
         }

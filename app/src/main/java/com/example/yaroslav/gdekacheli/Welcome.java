@@ -28,6 +28,7 @@ public class Welcome extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(Welcome.this, FullFind.class);
                 startActivity(intent);
+                overridePendingTransition(R.anim.outnext, R.anim.innext);
             }
         });
     }

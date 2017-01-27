@@ -3,8 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/sync"
-        android:title="Синхронизировать"
+        android:title="SYNC"
         app:showAsAction="always"
+        android:visible="false"
         />
+    <item
+        android:id="@+id/delete"
+        android:title="Удалить"
+        android:icon="@drawable/trash"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
 
 </menu>

@@ -14,8 +14,6 @@
     tools:context="com.example.yaroslav.gdekacheli.Add"
     tools:showIn="@layout/activity_add">
 
-
-
     <ProgressBar
         android:id="@+id/add_progress"
         style="?android:attr/progressBarStyleLarge"
@@ -64,7 +62,6 @@
                 android:hint="Описание качелей"
                 android:imeActionLabel="@string/action_sign_in_short"
                 android:imeOptions="actionUnspecified"
-                android:maxLines="1"
                 android:selectAllOnFocus="false"
                 android:inputType="text|textAutoCorrect|textMultiLine">
             </EditText>
@@ -83,13 +80,21 @@
             android:layout_height="wrap_content"
             android:id="@+id/ratingMarker"
             android:paddingBottom="10dp"/>
-        <ImageView
+
+        <Button
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            app:srcCompat="@drawable/quantum_ic_art_track_grey600_48"
-            android:id="@+id/photoHolder"
-            />
+            android:layout_height="45dp"
+            android:text="Прикреплено 0 фото"
+            android:paddingRight="12dp"
+            android:paddingLeft="5dp"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            android:textColor="#ffffff"
+            android:drawableLeft="@android:drawable/ic_menu_gallery"
+            android:id="@+id/showPhoto"
+            android:background="#33B5E5"
+            android:layout_marginBottom="10dp"/>
+
         <ImageButton
             android:layout_width="match_parent"
             android:layout_height="45dp"
@@ -98,17 +103,17 @@
             android:layout_marginBottom="10dp"
             android:background="#33B5E5"
              />
+
         <Button
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:text="ДОБАВИТЬ!"
             android:textAlignment="center"
-            android:textColor="@color/cast_expanded_controller_ad_container_white_stripe_color"
+            android:textColor="#ffffff"
             android:id="@+id/fab"
-            android:background="#33B5E5"/>
+            android:background="#33B5E5" />
     </LinearLayout>
     </ScrollView>
-
 
 
 </RelativeLayout>
