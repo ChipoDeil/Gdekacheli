@@ -444,7 +444,6 @@ public class Add extends AppCompatActivity {
                 String line;
                 while((line = br.readLine()) != null) {
                     Log.d("output text", line);
-                    //TODO switch
                     if (line.equals("false")) {
                         break;
                     } else if(line.equals("token")){
@@ -471,7 +470,6 @@ public class Add extends AppCompatActivity {
                         BufferedReader br2 = new BufferedReader(new InputStreamReader(is2));
                         String line2;
                         while ((line2 = br2.readLine()) != null) {
-                            //TODO reading lines
                         }
                     }
                 }

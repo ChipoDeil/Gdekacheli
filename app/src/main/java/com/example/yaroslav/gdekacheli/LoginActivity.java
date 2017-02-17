@@ -62,7 +62,6 @@ public class LoginActivity extends AppCompatActivity {
                 return false;
             }
         });
-        //TODO rename
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override

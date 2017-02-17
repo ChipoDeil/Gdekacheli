@@ -104,7 +104,6 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                     if (InfoHolder.getName() != null && InfoHolder.getToken() != null) {
                         name = InfoHolder.getName();
                         token = InfoHolder.getToken();
-                        Log.d("token", token);
                         isLogged = new isLogged(name, token);
                         isLogged.execute((Void) null);
                     }
@@ -316,9 +315,7 @@ public class FullFind extends AppCompatActivity implements OnMapReadyCallback {
                 is = conn.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
                 String line;
-                Log.d("async", "inside");
                 while((line = br.readLine()) != null) {
-                    //TODO switch
                     if (line.equals("false")) {
                         break;
                     } else if(line.equals("error")){
